@@ -11,6 +11,7 @@ mod hostile_params;
 mod hostile_sessions;
 mod long_renders;
 mod midi_offset;
+mod min_secs_with_timecode_counter;
 mod mix_required_params;
 mod random_edits;
 mod recording;
