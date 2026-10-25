@@ -413,3 +413,10 @@ fn shuffle_lock_and_snap_rules_hold_when_a_call_names_tracks() {
     run(&mut e, "edit.mode", json!({"mode": "grid"}));
     assert!(e.execute("edit.snap_to_grid", &json!({"tracks": [t.0]})).is_err());
 }
+
+#[test]
+fn moving_a_group_left_past_zero_keeps_its_spacing() {
+    let (mut e, t, ids) = long("slip", &[(500, 100, 0), (2000, 100, 0)]);
+    run(&mut e, "edit.move_clips", json!({"clips": [ids[0].0, ids[1].0], "by": -1000}));
+    assert_eq!(clips(&e, t), [(0, 100), (1500, 100)]);
+}
