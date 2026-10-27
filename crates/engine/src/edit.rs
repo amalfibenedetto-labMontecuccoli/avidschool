@@ -238,13 +238,16 @@ pub fn paste(s: &mut Session, track: TrackId, at: Samples, clips: &[Clip], lengt
         make_room(s, track, at, length)?;
     }
     let mut ids = Vec::new();
+    let mut placed = Vec::new();
     for c in clips {
         let mut nc = c.clone();
         nc.id = s.new_clip_id();
         nc.start += at;
         ids.push(nc.id);
-        place_clip(s, track, nc);
+        placed.push((track, nc));
     }
+    // Clear every destination first, so pasted clips that overlap (crossfades) keep each other.
+    put_clips(s, placed);
     Ok(ids)
 }
 
