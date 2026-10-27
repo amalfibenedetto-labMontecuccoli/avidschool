@@ -234,32 +234,40 @@ fn matroska_sizes_beyond_the_file_are_errors_not_aborts() {
         0x61, 0x74, 0x72, 0x6F, 0x73, 0x6B, 0x61,
     ];
     let segment = |body: Vec<u8>| [ebml_header(), ebml(&[0x18, 0x53, 0x80, 0x67], u64::MAX, &body)].concat();
-    // A track whose CodecPrivate claims 2^46 bytes, inside parents that claim even more.
-    let codec_private = ebml(&[0x63, 0xA2], huge >> 1, &[0; 16]);
-    let track = ebml(&[0xAE], huge, &[ebml(&[0xD7], 1, &[1]), ebml(&[0x86], 6, b"A_OPUS"), codec_private].concat());
-    let tracks = segment(ebml(&[0x16, 0x54, 0xAE, 0x6B], huge, &track));
-    // A valid 16-bit PCM track, then a cluster whose SimpleBlock claims 2^47 bytes of frame data.
-    let audio = [ebml(&[0xB5], 8, &48_000f64.to_be_bytes()), ebml(&[0x9F], 1, &[1]), ebml(&[0x62, 0x64], 1, &[16])].concat();
-    let pcm = [
-        ebml(&[0xD7], 1, &[1]),
-        ebml(&[0x73, 0xC5], 1, &[1]),
-        ebml(&[0x83], 1, &[2]),
-        ebml(&[0x86], 13, b"A_PCM/INT/LIT"),
-        ebml(&[0xE1], audio.len() as u64, &audio),
-    ]
-    .concat();
-    let pcm = ebml(&[0xAE], pcm.len() as u64, &pcm);
-    let block = ebml(&[0x1F, 0x43, 0xB6, 0x75], u64::MAX, &[ebml(&[0xE7], 1, &[0]), ebml(&[0xA3], huge, &[0x81, 0, 0, 0x80])].concat());
     let info = [ebml(&[0x2A, 0xD7, 0xB1], 3, &[0x0F, 0x42, 0x40]), ebml(&[0x4D, 0x80], 4, b"test"), ebml(&[0x57, 0x41], 4, b"test")].concat();
     let info = ebml(&[0x15, 0x49, 0xA9, 0x66], info.len() as u64, &info);
-    let cluster = segment([info, ebml(&[0x16, 0x54, 0xAE, 0x6B], pcm.len() as u64, &pcm), block].concat());
+    // A valid 16-bit PCM track entry's children, followed by `extra`.
+    let pcm = |extra: &[u8]| {
+        let audio = [ebml(&[0xB5], 8, &48_000f64.to_be_bytes()), ebml(&[0x9F], 1, &[1]), ebml(&[0x62, 0x64], 1, &[16])].concat();
+        [
+            ebml(&[0xD7], 1, &[1]),
+            ebml(&[0x73, 0xC5], 1, &[1]),
+            ebml(&[0x83], 1, &[2]),
+            ebml(&[0x86], 13, b"A_PCM/INT/LIT"),
+            ebml(&[0xE1], audio.len() as u64, &audio),
+            extra.to_vec(),
+        ]
+        .concat()
+    };
+    // That track with a CodecPrivate claiming 2^46 bytes, inside parents that claim even more: the
+    // segment is valid up to that read, which runs out of file.
+    let track = ebml(&[0xAE], huge, &pcm(&ebml(&[0x63, 0xA2], huge >> 1, &[0; 16])));
+    let codec_data = segment([info.clone(), ebml(&[0x16, 0x54, 0xAE, 0x6B], huge, &track)].concat());
+    // The plain track, then a cluster whose SimpleBlock claims 2^47 bytes of frame data.
+    let track = pcm(&[]);
+    let track = ebml(&[0xAE], track.len() as u64, &track);
+    let block = ebml(&[0x1F, 0x43, 0xB6, 0x75], u64::MAX, &[ebml(&[0xE7], 1, &[0]), ebml(&[0xA3], huge, &[0x81, 0, 0, 0x80])].concat());
+    let cluster = segment([info, ebml(&[0x16, 0x54, 0xAE, 0x6B], track.len() as u64, &track), block].concat());
+    let out_of_file = |r: Result<_, AudioError>| matches!(r, Err(AudioError::Malformed(m)) if m.contains("end of file"));
     for hint in [None, Some("mkv"), Some("wav")] {
-        for (name, f) in [("reported", &reported[..]), ("codec data", &tracks)] {
-            assert!(probe(f, hint).is_err(), "{name}, {hint:?}");
-            assert!(decode(f, hint).is_err(), "{name}, {hint:?}");
-        }
-        // The block reader stops at the end of the file: a best-effort read of what is there.
-        let _ = probe(&cluster, hint);
+        assert!(probe(&reported, hint).is_err(), "{hint:?}");
+        assert!(decode(&reported, hint).is_err(), "{hint:?}");
+        // Refused at the oversized read itself, not by anything before it.
+        assert!(out_of_file(probe(&codec_data, hint).map(|_| ())), "{hint:?}: {:?}", probe(&codec_data, hint).err());
+        assert!(out_of_file(decode(&codec_data, hint).map(|_| ())), "{hint:?}");
+        // The file and its track open, so decoding reaches the block; the block reader stops at the
+        // end of the file, a best-effort read of what is there.
+        assert!(probe(&cluster, hint).is_ok(), "{hint:?}: {:?}", probe(&cluster, hint).err());
         assert!(decode(&cluster, hint).map_or(0, |(_, b)| b.frames()) < 1_000, "{hint:?}");
     }
 }
