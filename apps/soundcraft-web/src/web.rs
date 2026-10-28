@@ -14,6 +14,24 @@ use crate::drive;
 
 const CANVAS_ID: &str = "soundcraft_canvas";
 const LANG_KEY: &str = "avidschool_lang";
+const ZOOM_KEY: &str = "avidschool_zoom";
+
+/// The interface size: the one the user chose in this browser, otherwise bigger on a touch screen
+/// (a tablet shows the desktop layout, whose buttons are too small for a finger).
+fn initial_zoom() -> f32 {
+    let storage = web_sys::window().and_then(|w| w.local_storage().ok().flatten());
+    if let Some(z) = storage.and_then(|s| s.get_item(ZOOM_KEY).ok().flatten()).and_then(|z| z.parse::<f32>().ok()) {
+        return z.clamp(0.7, 2.5);
+    }
+    let touch = web_sys::window().and_then(|w| w.match_media("(pointer: coarse)").ok().flatten()).is_some_and(|m| m.matches());
+    if touch { 1.4 } else { 1.0 }
+}
+
+fn keep_zoom(zoom: f32) {
+    if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten()) {
+        let _ = storage.set_item(ZOOM_KEY, &zoom.to_string());
+    }
+}
 
 /// `it` or `en` according to the interface language.
 fn t(it: &'static str, en: &'static str) -> &'static str {
@@ -76,6 +94,7 @@ pub fn start() {
                     let engine = if query().contains("empty") { Engine::default() } else { soundcraft_engine::demo::demo_engine() };
                     let player = soundcraft_playback::Player::new(Arc::new(engine.session().clone()));
                     soundcraft_ui_egui::i18n::set_lang(saved_language());
+                    cc.egui_ctx.set_zoom_factor(initial_zoom());
                     let mut services = Services::default();
                     if !drive::disabled() {
                         drive::remember_context(&cc.egui_ctx);
@@ -312,6 +331,7 @@ impl WebShell {
             }
         }
         let (mut sign_in, mut sign_out, mut list, mut save, mut switch) = (false, false, false, false, false);
+        let mut zoom_step = 0.0_f32;
         let account = drive::account();
         egui::Panel::top("drive_bar").exact_size(44.0).show(ui, |ui| {
             egui::ScrollArea::horizontal().auto_shrink([false, true]).show(ui, |ui| {
@@ -319,6 +339,12 @@ impl WebShell {
                     let button = |ui: &mut egui::Ui, text: &str| ui.add(egui::Button::new(text).min_size(egui::vec2(0.0, 32.0))).clicked();
                     ui.label("Google Drive:");
                     switch = button(ui, t("English", "Italiano"));
+                    if button(ui, "A−") {
+                        zoom_step = -0.15;
+                    }
+                    if button(ui, "A+") {
+                        zoom_step = 0.15;
+                    }
                     match &account {
                         Some(name) => {
                             ui.label(name.as_str());
@@ -338,6 +364,11 @@ impl WebShell {
                 });
             });
         });
+        if zoom_step != 0.0 {
+            let zoom = (ui.ctx().zoom_factor() + zoom_step).clamp(0.7, 2.5);
+            ui.ctx().set_zoom_factor(zoom);
+            keep_zoom(zoom);
+        }
         if switch {
             toggle_language();
             self.app.services.school_about = Some(school_about());
