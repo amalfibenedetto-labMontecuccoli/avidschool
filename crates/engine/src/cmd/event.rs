@@ -313,7 +313,10 @@ fn add_marker(e: &mut Engine, p: &Value) -> Result<Value> {
         (None, Some(a), Some(b)) => (a, b),
         (None, Some(p), None) | (None, None, Some(p)) => (p, p),
         _ if kind == MarkerKind::Selection => (sel.start, sel.end),
-        _ => (if e.transport.playing { e.transport.position } else { sel.start }, sel.start),
+        _ => {
+            let point = if e.transport.playing { e.transport.position } else { sel.start };
+            (point, point)
+        }
     };
     let s = e.session_mut();
     let n = s.markers.len() + 1;
@@ -482,6 +485,19 @@ mod tests {
         assert_eq!(find(&a), Some((96_000, 96_000)));
         assert_eq!(find(&b), Some((96_000, 96_000)));
         assert_eq!(find(&c), Some((1000, 2000)));
+    }
+
+    /// A plain marker added during playback is a point at the playhead, whatever the edit selection is.
+    #[test]
+    fn markers_add_while_playing_is_a_point_at_the_playhead() {
+        let mut e = demo_engine();
+        e.session_mut().edit.selection.start = 48_000;
+        e.session_mut().edit.selection.end = 48_000;
+        e.transport.playing = true;
+        e.transport.position = 4800;
+        let r = e.execute("markers.add", &json!({"name": "M"})).unwrap();
+        let m = e.session().markers.iter().find(|m| Some(m.id.0) == r["id"].as_u64()).map(|m| (m.start, m.end));
+        assert_eq!(m, Some((4800, 4800)));
     }
 
     /// `markers.edit` documents `color`: it sets the memory location's RGB colour, undoably; `null` clears it.
