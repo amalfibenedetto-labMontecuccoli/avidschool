@@ -94,17 +94,17 @@ fn beat_detective(app: &mut SoundApp, ctx: &egui::Context) {
     if !open {
         return;
     }
-    egui::Window::new("Beat Detective").open(&mut open).default_size(vec2(360.0, 220.0)).show(ctx, |ui| {
-        ui.label("Analyses the edit selection on the selected tracks.");
+    egui::Window::new(crate::i18n::tr("Beat Detective")).open(&mut open).default_size(vec2(360.0, 220.0)).show(ctx, |ui| {
+        ui.label(crate::i18n::tr("Analyses the edit selection on the selected tracks."));
         ui.add(egui::Slider::new(&mut app.ops.beat_sensitivity, 0.0..=1.0).text("Sensitivity"));
         crate::widgets::checkbox(ui, &mut app.ops.beat_separate, "Separate clips at detected beats");
         crate::widgets::checkbox(ui, &mut app.ops.beat_set_tempo, "Set the session tempo from the beats");
         ui.horizontal(|ui| {
-            if ui.button("Analyze").clicked() {
+            if ui.button(crate::i18n::tr("Analyze")).clicked() {
                 let r = app.run("event.beat_detective", json!({"sensitivity": app.ops.beat_sensitivity, "separate": false, "set_tempo": false}));
                 app.ops.beat_result = r.map_or_else(|e| e, |v| v.to_string());
             }
-            if ui.button(egui::RichText::new("Apply").strong()).clicked() {
+            if ui.button(egui::RichText::new(crate::i18n::tr("Apply")).strong()).clicked() {
                 let r = app.run(
                     "event.beat_detective",
                     json!({"sensitivity": app.ops.beat_sensitivity, "separate": app.ops.beat_separate, "set_tempo": app.ops.beat_set_tempo}),
@@ -114,10 +114,10 @@ fn beat_detective(app: &mut SoundApp, ctx: &egui::Context) {
         });
         ui.separator();
         ui.horizontal(|ui| {
-            ui.label("Identify Beat: selection is");
+            ui.label(crate::i18n::tr("Identify Beat: selection is"));
             ui.add(egui::DragValue::new(&mut app.ops.identify_bars).range(1..=64)).accessible_name("Identify beat bars");
-            ui.label("bar(s)");
-            if ui.button("Set Tempo").clicked() {
+            ui.label(crate::i18n::tr("bar(s)"));
+            if ui.button(crate::i18n::tr("Set Tempo")).clicked() {
                 let r = app.run("event.identify_beat", json!({"bars": app.ops.identify_bars}));
                 app.ops.beat_result = r.map_or_else(|e| e, |v| v.to_string());
             }
@@ -152,7 +152,7 @@ fn tempo_ops(app: &mut SoundApp, ctx: &egui::Context) {
     if !open {
         return;
     }
-    egui::Window::new("Tempo Operations").open(&mut open).default_size(vec2(360.0, 200.0)).show(ctx, |ui| {
+    egui::Window::new(crate::i18n::tr("Tempo Operations")).open(&mut open).default_size(vec2(360.0, 200.0)).show(ctx, |ui| {
         craft_ui::ComboBox::from_label("Curve").selected_text(app.ops.tempo_curve.clone()).show_ui(ui, |ui| {
             for c in ["constant", "linear", "parabolic", "s-curve", "scale", "stretch"] {
                 ui.selectable_value(&mut app.ops.tempo_curve, c.to_string(), c);
@@ -166,7 +166,7 @@ fn tempo_ops(app: &mut SoundApp, ctx: &egui::Context) {
             )
             .small(),
         );
-        if ui.button(egui::RichText::new("Apply").strong()).clicked() {
+        if ui.button(egui::RichText::new(crate::i18n::tr("Apply")).strong()).clicked() {
             let (id, p) = tempo_ops_apply(&app.ops.tempo_curve, app.ops.tempo_start, app.ops.tempo_end);
             let r = app.run(id, p);
             result_line(ui, &r);
@@ -182,7 +182,7 @@ fn time_ops(app: &mut SoundApp, ctx: &egui::Context) {
     if !open {
         return;
     }
-    egui::Window::new("Time Operations").open(&mut open).default_size(vec2(360.0, 200.0)).show(ctx, |ui| {
+    egui::Window::new(crate::i18n::tr("Time Operations")).open(&mut open).default_size(vec2(360.0, 200.0)).show(ctx, |ui| {
         craft_ui::ComboBox::from_label("Operation").selected_text(app.ops.time_op.clone()).show_ui(ui, |ui| {
             for c in ["insert", "cut", "change meter", "move song start"] {
                 ui.selectable_value(&mut app.ops.time_op, c.to_string(), c);
@@ -205,10 +205,10 @@ fn time_ops(app: &mut SoundApp, ctx: &egui::Context) {
                 ui.add(egui::DragValue::new(&mut app.ops.time_seconds).range(0.0..=3600.0).suffix(" s")).accessible_name("Time (seconds)");
             }
             _ => {
-                ui.label(egui::RichText::new("Uses the edit selection.").small());
+                ui.label(egui::RichText::new(crate::i18n::tr("Uses the edit selection.")).small());
             }
         }
-        if ui.button(egui::RichText::new("Apply").strong()).clicked() {
+        if ui.button(egui::RichText::new(crate::i18n::tr("Apply")).strong()).clicked() {
             let at = app.engine.session().edit.selection.start;
             let r = match app.ops.time_op.as_str() {
                 "insert" => app.run("event.insert_time", json!({"start": at, "length": {"seconds": app.ops.time_seconds}})),
@@ -227,7 +227,7 @@ fn midi_ops(app: &mut SoundApp, ctx: &egui::Context) {
     if !open {
         return;
     }
-    egui::Window::new("MIDI Operations").open(&mut open).default_size(vec2(360.0, 220.0)).show(ctx, |ui| {
+    egui::Window::new(crate::i18n::tr("MIDI Operations")).open(&mut open).default_size(vec2(360.0, 220.0)).show(ctx, |ui| {
         craft_ui::ComboBox::from_label("Operation").selected_text(app.ops.midi_op.clone()).show_ui(ui, |ui| {
             for c in ["quantize", "transpose", "change velocity", "flatten performance", "restore performance"] {
                 ui.selectable_value(&mut app.ops.midi_op, c.to_string(), c);
@@ -251,8 +251,8 @@ fn midi_ops(app: &mut SoundApp, ctx: &egui::Context) {
             }
             _ => {}
         }
-        ui.label(egui::RichText::new("Applies to the selected MIDI clips (or those under the selection).").small());
-        if ui.button(egui::RichText::new("Apply").strong()).clicked() {
+        ui.label(egui::RichText::new(crate::i18n::tr("Applies to the selected MIDI clips (or those under the selection).")).small());
+        if ui.button(egui::RichText::new(crate::i18n::tr("Apply")).strong()).clicked() {
             let r = match app.ops.midi_op.as_str() {
                 "quantize" => {
                     app.run("event.quantize", json!({"grid": app.ops.quant_grid, "strength": app.ops.quant_strength, "swing": app.ops.quant_swing}))
@@ -275,8 +275,8 @@ fn rtp(app: &mut SoundApp, ctx: &egui::Context) {
     }
     let targets = app.engine.target_tracks();
     sync_rtp_form(&mut app.ops, app.engine.session(), targets, ctx.dragged_id().is_some());
-    egui::Window::new("MIDI Real-Time Properties").open(&mut open).default_size(vec2(340.0, 200.0)).show(ctx, |ui| {
-        ui.label("Non-destructive, applied at playback to the selected MIDI tracks.");
+    egui::Window::new(crate::i18n::tr("MIDI Real-Time Properties")).open(&mut open).default_size(vec2(340.0, 200.0)).show(ctx, |ui| {
+        ui.label(crate::i18n::tr("Non-destructive, applied at playback to the selected MIDI tracks."));
         let mut changed = RtpChanged::default();
         changed.velocity = ui.add(egui::Slider::new(&mut app.ops.rtp_velocity, -127..=127).text("Velocity +")).changed();
         changed.transpose = ui.add(egui::Slider::new(&mut app.ops.rtp_transpose, -48..=48).text("Transpose")).changed();
@@ -286,10 +286,10 @@ fn rtp(app: &mut SoundApp, ctx: &egui::Context) {
             let _ = app.engine.execute_merged("event.midi_rtp", &p, "rtp");
         }
         ui.horizontal(|ui| {
-            if ui.button("Write to Notes").clicked() {
+            if ui.button(crate::i18n::tr("Write to Notes")).clicked() {
                 let _ = app.run("track.write_midi_rtp", json!({}));
             }
-            if ui.button("Clear").clicked() {
+            if ui.button(crate::i18n::tr("Clear")).clicked() {
                 let _ = app.run("event.midi_rtp", json!({"clear": true}));
                 app.ops.rtp_velocity = 0;
                 app.ops.rtp_transpose = 0;

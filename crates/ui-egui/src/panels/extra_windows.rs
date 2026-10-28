@@ -102,7 +102,7 @@ fn renderer(app: &mut SoundApp, ctx: &egui::Context) {
             (tr.name.clone(), sp.x, sp.y, sp.z)
         })
         .collect();
-    egui::Window::new(egui::RichText::new("Renderer").font(bold(13.0))).open(&mut open).default_size(vec2(380.0, 440.0)).resizable(true).show(
+    egui::Window::new(egui::RichText::new(crate::i18n::tr("Renderer")).font(bold(13.0))).open(&mut open).default_size(vec2(380.0, 440.0)).resizable(true).show(
         ctx,
         |ui| {
             ui.label(egui::RichText::new(format!("Main output: {}", fmt.label())).font(regular(11.0)).color(t.text));
@@ -151,7 +151,7 @@ fn ui_customization(app: &mut SoundApp, ctx: &egui::Context) {
     if !open {
         return;
     }
-    egui::Window::new(egui::RichText::new("Appearance").font(bold(13.0))).open(&mut open).default_size(vec2(320.0, 180.0)).resizable(false).show(
+    egui::Window::new(egui::RichText::new(crate::i18n::tr("Appearance")).font(bold(13.0))).open(&mut open).default_size(vec2(320.0, 180.0)).resizable(false).show(
         ctx,
         |ui| {
             // Each control carries its own visible label, which is also its accessible name. A
@@ -177,7 +177,7 @@ fn ui_customization(app: &mut SoundApp, ctx: &egui::Context) {
             }
             crate::widgets::checkbox(ui, &mut app.extra.auto_update_config, "Auto-update configuration");
             ui.add_space(4.0);
-            if ui.button("Reset").clicked() {
+            if ui.button(crate::i18n::tr("Reset")).clicked() {
                 app.extra.ui_scale = 1.0;
                 app.extra.reduce_motion = false;
                 let _ = app.run("ui.theme", json!({"mode": crate::theme::ThemeMode::default().id()}));

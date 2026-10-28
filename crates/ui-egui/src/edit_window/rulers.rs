@@ -384,7 +384,7 @@ pub(super) fn views_button(app: &mut SoundApp, ui: &mut Ui, rulers: Rect) {
     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(r));
     let resp = crate::widgets::selector_box(&mut child, r.width(), r.height(), "Views", Tokens::current().text);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, child.is_enabled(), "Views"));
-    let resp = resp.on_hover_text("Columns beside the track headers: inserts, sends, I/O…");
+    let resp = resp.on_hover_text(crate::i18n::tr("Columns beside the track headers: inserts, sends, I/O…"));
     egui::Popup::menu(&resp).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
         let shown = edit_columns(app.engine.session());
         for (id, label, _, _) in COLUMNS {
@@ -393,10 +393,10 @@ pub(super) fn views_button(app: &mut SoundApp, ui: &mut Ui, rulers: Rect) {
             }
         }
         ui.separator();
-        if ui.button("All").clicked() {
+        if ui.button(crate::i18n::tr("All")).clicked() {
             let _ = app.run("view.edit_all", json!({}));
         }
-        if ui.button("Minimal").clicked() {
+        if ui.button(crate::i18n::tr("Minimal")).clicked() {
             let _ = app.run("view.edit_minimal", json!({}));
         }
     });

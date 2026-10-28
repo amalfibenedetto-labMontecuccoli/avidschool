@@ -9,7 +9,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
     let Some(left) = app.leftovers.first().cloned() else { return };
     let mut open = true;
     let mut recover = None;
-    egui::Window::new(egui::RichText::new("Recover Unsaved Work").font(bold(13.0)))
+    egui::Window::new(egui::RichText::new(crate::i18n::tr("Recover Unsaved Work")).font(bold(13.0)))
         .open(&mut open)
         .collapsible(false)
         .resizable(false)
@@ -20,11 +20,11 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
             ui.label(format!("“{}” has {what} from an earlier run, autosaved {age}.", left.name));
             ui.separator();
             ui.horizontal(|ui| {
-                if ui.button("Discard").clicked() {
+                if ui.button(crate::i18n::tr("Discard")).clicked() {
                     recover = Some(false);
                 }
-                let recover_button = egui::Button::new(egui::RichText::new("Recover").strong()).fill(Tokens::current().accent);
-                if ui.add_enabled(!app.engine.transport.recording, recover_button).on_disabled_hover_text("Stop recording first").clicked() {
+                let recover_button = egui::Button::new(egui::RichText::new(crate::i18n::tr("Recover")).strong()).fill(Tokens::current().accent);
+                if ui.add_enabled(!app.engine.transport.recording, recover_button).on_disabled_hover_text(crate::i18n::tr("Stop recording first")).clicked() {
                     recover = Some(true);
                 }
             });

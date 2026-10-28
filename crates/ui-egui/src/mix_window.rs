@@ -277,7 +277,7 @@ fn object_section(app: &mut SoundApp, ui: &mut Ui, cx: &StripCtx<'_>, mut y: f32
             let on = app.engine.session().edit.flag(&format!("object.{}", id.0));
             let mut c = ui.new_child(egui::UiBuilder::new().max_rect(sec));
             let label = egui::RichText::new(if on { "OBJECT" } else { "BED" }).font(bold(9.0));
-            if c.add_sized(sec.size(), egui::Button::new(label).selected(on)).on_hover_text("Route as an immersive object or to the bed").clicked() {
+            if c.add_sized(sec.size(), egui::Button::new(label).selected(on)).on_hover_text(crate::i18n::tr("Route as an immersive object or to the bed")).clicked() {
                 let _ = app.run("track.object", json!({"tracks": [id.0], "object": !on}));
             }
         }

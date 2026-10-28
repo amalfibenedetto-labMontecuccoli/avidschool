@@ -199,7 +199,7 @@ fn tools(app: &mut SoundApp, ui: &mut Ui) {
             let bracket = Rect::from_min_max(pos2(bx0 - 2.0, r.min.y + 1.0), pos2(bx1 + 2.0, r.min.y + 5.0));
             let resp = ui.interact(bracket.expand2(vec2(0.0, 2.0)), ui.scope_id().with("smart"), Sense::click());
             ui.painter().rect_filled(bracket, 1.0, if cur == Tool::Smart { t.accent } else { t.tool_bracket_off });
-            if resp.on_hover_text("Smart Tool (F6+F7 / F7+F8)").clicked() {
+            if resp.on_hover_text(crate::i18n::tr("Smart Tool (F6+F7 / F7+F8)")).clicked() {
                 let _ = app.run("edit.tool", json!({"tool": "smart"}));
             }
             ui.horizontal(|ui| {
@@ -289,7 +289,7 @@ fn grid_nudge(app: &mut SoundApp, ui: &mut Ui) {
     let resp = ui.interact(gl, ui.scope_id().with("grid_lines"), Sense::click());
     key(ui.painter(), gl, &resp, if lines { t.mode_on } else { t.counter_off });
     ui.painter().text(gl.center(), Align2::CENTER_CENTER, "Grid", bold(11.0), if lines { t.mode_on_text } else { t.mode_off_text });
-    if resp.on_hover_text("Show grid lines").clicked() {
+    if resp.on_hover_text(crate::i18n::tr("Show grid lines")).clicked() {
         let _ = app.run("view.grid_lines", json!({}));
     }
     let gr = Rect::from_min_max(pos2(r.min.x + 60.0, r.min.y + 6.0), pos2(r.max.x - 4.0, r.min.y + 26.0));
@@ -345,20 +345,20 @@ fn transport(app: &mut SoundApp, ui: &mut Ui) {
                 let (r, resp) = ui.allocate_exact_size(vec2(38.0, 28.0), Sense::click());
                 key(ui.painter(), r, &resp, key_fill(&resp));
                 icons::draw(ui.painter(), r.shrink(5.0), "stop", if playing { t.text } else { t.accent });
-                if resp.on_hover_text("Stop (Space)").clicked() {
+                if resp.on_hover_text(crate::i18n::tr("Stop (Space)")).clicked() {
                     let _ = app.run("transport.stop", json!({}));
                 }
                 let (r, resp) = ui.allocate_exact_size(vec2(38.0, 28.0), Sense::click());
                 key(ui.painter(), r, &resp, if playing { Color32::from_rgb(40, 90, 50) } else { key_fill(&resp) });
                 icons::draw(ui.painter(), r.shrink(5.0), "play", if playing { Color32::from_rgb(120, 255, 140) } else { t.counter_text });
-                if resp.on_hover_text("Play (Space)").clicked() {
+                if resp.on_hover_text(crate::i18n::tr("Play (Space)")).clicked() {
                     let _ = app.run("transport.play", json!({}));
                 }
                 let (r, resp) = ui.allocate_exact_size(vec2(38.0, 28.0), Sense::click());
                 key(ui.painter(), r, &resp, if recording { Color32::from_rgb(110, 30, 30) } else { key_fill(&resp) });
                 icons::draw(ui.painter(), r.shrink(5.0), "record", t.rec);
                 // macOS gives Cmd+Space to Spotlight unless the user frees it, so name F12 first.
-                let resp = resp.on_hover_text("Record (F12 or Cmd+Space)");
+                let resp = resp.on_hover_text(crate::i18n::tr("Record (F12 or Cmd+Space)"));
                 if let Some(why) = app.record_hint() {
                     // Below the whole group, so the hint covers none of its buttons.
                     let below = Rect::from_min_max(r.min, pos2(r.max.x, g.max.y));
@@ -412,7 +412,7 @@ fn tempo_meter(app: &mut SoundApp, ui: &mut Ui) {
     tempo_value(app, ui, r.max.x - 8.0, r.min.y + 48.0, bpm);
     let clk = Rect::from_min_size(pos2(r.min.x + 6.0, r.min.y + 40.0), vec2(18.0, 18.0));
     icons::draw(ui.painter(), clk, "click", if click { t.counter_text } else { t.text_dim });
-    if ui.interact(clk, ui.scope_id().with("click"), Sense::click()).on_hover_text("Click").clicked() {
+    if ui.interact(clk, ui.scope_id().with("click"), Sense::click()).on_hover_text(crate::i18n::tr("Click")).clicked() {
         let _ = app.run("options.click", json!({}));
     }
 }
@@ -445,7 +445,7 @@ fn tempo_value(app: &mut SoundApp, ui: &mut Ui, right: f32, y: f32, bpm: f64) {
     if resp.drag_stopped() || resp.lost_focus() {
         app.engine.end_merge();
     }
-    resp.on_hover_text("Drag to change the tempo (Shift: fine steps), or click to type it");
+    resp.on_hover_text(crate::i18n::tr("Drag to change the tempo (Shift: fine steps), or click to type it"));
 }
 
 fn output_meter(app: &mut SoundApp, ui: &mut Ui) {

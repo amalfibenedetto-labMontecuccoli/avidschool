@@ -99,7 +99,7 @@ pub fn tracks_and_groups(app: &mut SoundApp, ui: &mut Ui) {
             let _ = app.run("edit.select_all", json!({}));
         }
         all.context_menu(|ui| {
-            if ui.button("New Group…").clicked() {
+            if ui.button(crate::i18n::tr("New Group…")).clicked() {
                 let _ = app.dialogs.open_for_command(&app.engine, "track.group");
                 ui.close();
             }
@@ -127,7 +127,7 @@ pub fn tracks_and_groups(app: &mut SoundApp, ui: &mut Ui) {
                 let _ = app.run("edit.select", json!({"tracks": members, "exact": true}));
             }
             resp.context_menu(|ui| {
-                if ui.button("Select Tracks in Group").clicked() {
+                if ui.button(crate::i18n::tr("Select Tracks in Group")).clicked() {
                     let _ = app.run("edit.select", json!({"tracks": members, "exact": true}));
                     ui.close();
                 }
@@ -135,11 +135,11 @@ pub fn tracks_and_groups(app: &mut SoundApp, ui: &mut Ui) {
                     let _ = app.run("track.group_toggle", json!({"group": id}));
                     ui.close();
                 }
-                if ui.button("Modify Group…").clicked() {
+                if ui.button(crate::i18n::tr("Modify Group…")).clicked() {
                     let _ = app.dialogs.open_modify_group(&app.engine, soundcraft_model::GroupId(id));
                     ui.close();
                 }
-                if ui.button("Delete Group").clicked() {
+                if ui.button(crate::i18n::tr("Delete Group")).clicked() {
                     let _ = app.run("track.ungroup", json!({"group": id}));
                     ui.close();
                 }

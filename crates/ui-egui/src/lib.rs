@@ -12,6 +12,7 @@ pub mod dialogs;
 pub mod docking;
 pub mod edit_window;
 pub mod fonts;
+pub mod i18n;
 pub mod icons;
 pub mod import;
 pub mod menus;

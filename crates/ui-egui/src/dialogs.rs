@@ -294,7 +294,7 @@ fn new_tracks_form(
     ui.horizontal(|ui| {
         let create = ui.label("Create");
         ui.add(egui::DragValue::new(count).range(1..=128)).labelled_by(create.id);
-        ui.label("new");
+        ui.label(crate::i18n::tr("new"));
         let fmt = craft_ui::ComboBox::from_id_salt("nt_fmt").selected_text(format.as_str()).show_ui(ui, |ui| {
             for f in soundcraft_model::ChannelFormat::ALL {
                 ui.selectable_value(format, f.label().to_string(), f.label());
@@ -320,7 +320,7 @@ fn new_tracks_form(
         tb.response.accessible_name("Timebase");
     });
     ui.horizontal(|ui| {
-        ui.label("Name:");
+        ui.label(crate::i18n::tr("Name:"));
         crate::widgets::named_text_field(ui.add(egui::TextEdit::singleline(name).desired_width(240.0)), "Name");
     });
     if buttons(ui, "Create", enter) {
@@ -332,10 +332,10 @@ fn new_tracks_form(
 /// The Bounce form's file row: a path field and a Browse button that also picks the format.
 fn bounce_file_row(app: &mut SoundApp, ui: &mut egui::Ui, path: &mut String, format: &mut FileFormat) {
     ui.horizontal(|ui| {
-        ui.label("File");
+        ui.label(crate::i18n::tr("File"));
         crate::widgets::named_text_field(ui.add(egui::TextEdit::singleline(path).desired_width(420.0)), "File");
         if let Some(pick) = &app.services.pick_save
-            && ui.button("Browse…").clicked()
+            && ui.button(crate::i18n::tr("Browse…")).clicked()
             && let Some(p) = pick("file.bounce_mix", std::path::Path::new(path.as_str()))
         {
             match unicode(&p) {
@@ -359,21 +359,21 @@ fn path_prompt_form(app: &mut SoundApp, ui: &mut egui::Ui, cmd: &str, path: &mut
         && cmd != "session.save_as"
         && cmd != "session.save_copy"
         && key != "dir"
-        && ui.button("Browse…").clicked()
+        && ui.button(crate::i18n::tr("Browse…")).clicked()
         && let Some(p) = pick(cmd, &[])
     {
         picked = Some(p);
     }
     if let Some(pick) = &app.services.pick_folder
         && key == "dir"
-        && ui.button("Browse…").clicked()
+        && ui.button(crate::i18n::tr("Browse…")).clicked()
         && let Some(p) = pick(std::path::Path::new(path.as_str()))
     {
         picked = Some(p);
     }
     if let Some(pick) = &app.services.pick_save
         && (cmd == "session.save_as" || cmd == "session.save_copy")
-        && ui.button("Browse…").clicked()
+        && ui.button(crate::i18n::tr("Browse…")).clicked()
         && let Some(p) = pick(cmd, std::path::Path::new(path.as_str()))
     {
         picked = Some(p);
@@ -427,13 +427,13 @@ fn strip_silence_form(
     ui.horizontal(|ui| {
         let mut mode = None;
         let mut rename = false;
-        if ui.button("Extract").clicked() {
+        if ui.button(crate::i18n::tr("Extract")).clicked() {
             mode = Some("extract");
         }
-        if ui.button("Rename…").clicked() {
+        if ui.button(crate::i18n::tr("Rename…")).clicked() {
             rename = true;
         }
-        if ui.button("Separate").clicked() {
+        if ui.button(crate::i18n::tr("Separate")).clicked() {
             mode = Some("separate");
         }
         // Enter on a focused Extract or Separate clicks that button, so Enter presses Strip only when neither was clicked.
@@ -503,7 +503,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                 }
                 Dialog::NewSession { name, sample_rate, demo } => {
                     ui.horizontal(|ui| {
-                        ui.label("Name");
+                        ui.label(crate::i18n::tr("Name"));
                         crate::widgets::named_text_field(ui.text_edit_singleline(name), "Name");
                     });
                     craft_ui::ComboBox::from_label("Sample Rate").selected_text(format!("{sample_rate} Hz")).show_ui(ui, |ui| {
@@ -540,7 +540,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                             .on_hover_text("Adds ±1 LSB triangular dither when writing 16- or 24-bit files. Leave it off when the master chain already dithers.");
                     });
                     ui.label(
-                        egui::RichText::new("Bounces the edit selection, or the whole session when nothing is selected.")
+                        egui::RichText::new(crate::i18n::tr("Bounces the edit selection, or the whole session when nothing is selected."))
                             .small()
                             .color(Tokens::current().text_dim),
                     );
@@ -627,7 +627,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                 }
                 Dialog::StripSilenceRename { names, .. } => {
                     strip_name_fields(ui, names, STRIP_NAME_LABELS);
-                    let cleared = ui.button("Clear").clicked();
+                    let cleared = ui.button(crate::i18n::tr("Clear")).clicked();
                     if cleared {
                         *names = StripNames::default();
                     }
@@ -637,7 +637,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                     }
                 }
                 Dialog::AutoRename { clips, names } => {
-                    ui.label("Text for naming the clips that editing makes from the selected clips:");
+                    ui.label(crate::i18n::tr("Text for naming the clips that editing makes from the selected clips:"));
                     strip_name_fields(ui, names, AUTO_NAME_LABELS);
                     if buttons(ui, "OK", enter) {
                         action = Some(auto_rename_action(clips, names));
@@ -645,14 +645,14 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                 }
                 Dialog::Group { id, name, edit, mix, members } => {
                     ui.horizontal(|ui| {
-                        ui.label("Name");
+                        ui.label(crate::i18n::tr("Name"));
                         crate::widgets::named_text_field(ui.text_edit_singleline(name), "Name");
                     });
                     ui.horizontal(|ui| {
                         crate::widgets::checkbox(ui, edit, "Edit group");
                         crate::widgets::checkbox(ui, mix, "Mix group");
                     });
-                    ui.label("Tracks");
+                    ui.label(crate::i18n::tr("Tracks"));
                     egui::ScrollArea::vertical().max_height(180.0).show(ui, |ui| {
                         for (_, n, on) in members.iter_mut() {
                             crate::widgets::checkbox(ui, on, n.as_str());
@@ -706,14 +706,14 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                 }
                 Dialog::ScoreSetup { title, composer, bars_per_system, show_track_names } => {
                     egui::Grid::new("score_setup").num_columns(2).spacing(vec2(10.0, 8.0)).show(ui, |ui| {
-                        ui.label("Title");
+                        ui.label(crate::i18n::tr("Title"));
                         // The painted label is not an accesskit name; name the field itself.
                         crate::widgets::named_text_field(ui.text_edit_singleline(title), "Score title");
                         ui.end_row();
-                        ui.label("Composer");
+                        ui.label(crate::i18n::tr("Composer"));
                         crate::widgets::named_text_field(ui.text_edit_singleline(composer), "Score composer");
                         ui.end_row();
-                        ui.label("Bars per system");
+                        ui.label(crate::i18n::tr("Bars per system"));
                         ui.add(egui::DragValue::new(bars_per_system).range(1..=16)).accessible_name("Bars per system");
                         ui.end_row();
                     });
@@ -742,7 +742,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
                         ui.label(format!("Save changes to “{name}” before closing?"));
                         ui.separator();
                         ui.horizontal(|ui| {
-                            if ui.button("Don't Save").clicked() {
+                            if ui.button(crate::i18n::tr("Don't Save")).clicked() {
                                 action = Some(then.clone());
                             }
                             if buttons(ui, "Save", enter) {
@@ -844,7 +844,7 @@ fn buttons_enabled(ui: &mut egui::Ui, ok: &str, enter: bool, ready: bool) -> boo
     let mut pressed = enter && ready;
     ui.separator();
     ui.horizontal(|ui| {
-        if ui.button("Cancel").clicked() {
+        if ui.button(crate::i18n::tr("Cancel")).clicked() {
             ui.ctx().memory_mut(|m| m.data.insert_temp(egui::Id::unique("dlg_cancel"), true));
         }
         let b = egui::Button::new(egui::RichText::new(ok).strong()).fill(Tokens::current().accent);

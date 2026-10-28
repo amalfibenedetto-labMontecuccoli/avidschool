@@ -46,7 +46,7 @@ pub(super) fn audiosuite_window(app: &mut SoundApp, ctx: &egui::Context) {
                     }
                 }
                 _ => {
-                    ui.label("No parameters.");
+                    ui.label(crate::i18n::tr("No parameters."));
                 }
             }
         }
@@ -57,7 +57,7 @@ pub(super) fn audiosuite_window(app: &mut SoundApp, ctx: &egui::Context) {
             "Processes the selected clips and replaces them with rendered audio."
         };
         ui.label(egui::RichText::new(hint).small());
-        if ui.button(egui::RichText::new("Render").strong()).clicked() {
+        if ui.button(egui::RichText::new(crate::i18n::tr("Render")).strong()).clicked() {
             let p: serde_json::Map<String, Value> = params.iter().map(|(k, v)| (k.clone(), json!(v))).collect();
             let _ = app.run("audiosuite.process", json!({"process": process, "params": p}));
         }

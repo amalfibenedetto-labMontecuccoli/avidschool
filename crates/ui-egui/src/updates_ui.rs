@@ -90,7 +90,7 @@ pub(crate) fn show(app: &mut SoundApp, ctx: &egui::Context) {
     if app.updates_rt.manual_window_open {
         let mut open = true;
         let mut close = false;
-        egui::Window::new("Check for Updates")
+        egui::Window::new(crate::i18n::tr("Check for Updates"))
             .open(&mut open)
             .resizable(false)
             .collapsible(false)
@@ -99,11 +99,11 @@ pub(crate) fn show(app: &mut SoundApp, ctx: &egui::Context) {
                 if let Some(msg) = &app.updates_rt.status_message {
                     ui.label(msg);
                 } else {
-                    ui.label("Checking for updates…");
+                    ui.label(crate::i18n::tr("Checking for updates…"));
                 }
                 ui.add_space(8.0);
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("Close").clicked() {
+                    if ui.button(crate::i18n::tr("Close")).clicked() {
                         close = true;
                     }
                 });

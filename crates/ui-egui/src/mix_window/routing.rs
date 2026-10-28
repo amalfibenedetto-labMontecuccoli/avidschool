@@ -50,7 +50,7 @@ fn route_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, input: bool) {
         let _ = app.run(cmd, json!({"track": id.0, key: visible[i]}));
         ui.close();
     }
-    if ui.button("new bus...").clicked() {
+    if ui.button(crate::i18n::tr("new bus...")).clicked() {
         let mut n = busses.len() + 1;
         while busses.contains(&format!("Bus {n}")) || app.engine.session().track_by_name(&format!("Bus {n}")).is_some() {
             n += 1;

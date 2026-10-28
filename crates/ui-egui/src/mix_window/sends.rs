@@ -191,7 +191,7 @@ fn send_options_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, 
     if let Route::Bus(bus) = send.target
         && let Some(aux) =
             app.engine.session().tracks.iter().find(|t| t.kind == TrackKind::Aux && t.mixer.input == Route::Bus(bus)).map(|t| (t.id, t.name.clone()))
-        && ui.button("Rename bus…").clicked()
+        && ui.button(crate::i18n::tr("Rename bus…")).clicked()
     {
         app.dialogs.open_rename_track(aux.0, &aux.1);
         ui.close();
@@ -346,7 +346,7 @@ fn send_route_menu(app: &mut SoundApp, ui: &Ui, field: &egui::Response, id: Trac
                         ui.label(egui::RichText::new(name).color(Tokens::current().counter_text));
                     });
                 });
-                ui.label(egui::RichText::new("DESTINATION").size(8.0).color(Tokens::current().text_dim));
+                ui.label(egui::RichText::new(crate::i18n::tr("DESTINATION")).size(8.0).color(Tokens::current().text_dim));
             }
             None => {
                 ui.strong(format!("Send {which} · Choose destination"));
@@ -374,11 +374,11 @@ fn send_route_menu(app: &mut SoundApp, ui: &Ui, field: &egui::Response, id: Trac
             })
         },
         |ui| {
-            if ui.button("new bus...").clicked() {
+            if ui.button(crate::i18n::tr("new bus...")).clicked() {
                 ui.close();
                 return Some(SendFooter::NewBus);
             }
-            if has_send && ui.button("Remove send").clicked() {
+            if has_send && ui.button(crate::i18n::tr("Remove send")).clicked() {
                 ui.close();
                 return Some(SendFooter::RemoveSend);
             }
