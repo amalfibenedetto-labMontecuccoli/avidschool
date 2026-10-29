@@ -11,6 +11,7 @@ pub mod catalog_more;
 pub mod clip_group_file;
 pub mod cmd;
 pub mod demo;
+mod dirty;
 pub mod edit;
 pub mod file_access;
 pub mod inspect;
@@ -22,6 +23,8 @@ use soundcraft_model::{Clip, Session, TrackId, ZoomState};
 use soundcraft_time::Samples;
 use std::cell::Cell;
 use std::sync::Arc;
+
+use dirty::same_document;
 
 pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
 pub use soundcraft_model as model;
@@ -511,19 +514,6 @@ impl Engine {
     }
 }
 
-/// Equal apart from what changes without editing: the selection, the playhead and the zoom.
-fn same_document(saved: &Session, doc: &Session) -> bool {
-    let mut doc = doc.clone();
-    let (from, to) = (&saved.edit, &mut doc.edit);
-    to.selection = from.selection;
-    to.timeline_selection = from.timeline_selection;
-    to.selected_tracks.clone_from(&from.selected_tracks);
-    to.selected_clips.clone_from(&from.selected_clips);
-    to.playhead = from.playhead;
-    to.zoom = from.zoom;
-    *saved == doc
-}
-
 fn install_panic_hook() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
@@ -606,6 +596,33 @@ mod dirty_tests {
         assert!(e.is_dirty());
         e.undo();
         assert!(!e.is_dirty());
+    }
+
+    #[test]
+    fn dirty_state_follows_save_undo_and_redo_after_navigation() {
+        let mut e = Engine::default();
+        let track = e.session_mut().add_track(soundcraft_model::TrackKind::Audio, soundcraft_model::ChannelFormat::Mono, None);
+        e.mark_clean();
+        e.execute("mix.volume", &json!({"track": track.0, "db": -6.0})).unwrap();
+        assert!(e.is_dirty());
+        // A repeated check uses the revision cache.
+        assert!(e.is_dirty());
+        e.mark_clean();
+        assert!(!e.is_dirty());
+        e.execute("edit.select", &json!({"tracks": [track.0], "start": 100, "end": 200})).unwrap();
+        e.execute("transport.locate", &json!({"at": 300})).unwrap();
+        e.execute("view.zoom_in", &json!({})).unwrap();
+        assert!(!e.is_dirty());
+        assert!(e.undo());
+        assert!(e.is_dirty(), "undoing away from the saved fader value is dirty");
+        assert!(e.redo());
+        assert!(!e.is_dirty(), "redoing to the saved fader value is clean despite navigation changes");
+        e.execute("mix.volume", &json!({"track": track.0, "db": -12.0})).unwrap();
+        assert!(e.is_dirty());
+        assert!(e.undo());
+        assert!(!e.is_dirty());
+        assert!(e.redo());
+        assert!(e.is_dirty());
     }
 }
 
