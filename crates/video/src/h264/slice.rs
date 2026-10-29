@@ -475,7 +475,7 @@ impl PocState {
             1 => {
                 let frame_num_offset = self.frame_num_offset(sh.idr, sh.frame_num, sps);
                 let n = sps.offset_for_ref_frame.len() as i32;
-                let mut abs_frame_num = if n != 0 { frame_num_offset + sh.frame_num as i32 } else { 0 };
+                let mut abs_frame_num = if n != 0 { frame_num_offset.saturating_add(sh.frame_num as i32) } else { 0 };
                 if sh.nal_ref_idc == 0 && abs_frame_num > 0 {
                     abs_frame_num -= 1;
                 }
@@ -483,17 +483,17 @@ impl PocState {
                 if abs_frame_num > 0 {
                     let cycle_cnt = (abs_frame_num - 1) / n;
                     let in_cycle = (abs_frame_num - 1) % n;
-                    let delta_cycle: i32 = sps.offset_for_ref_frame.iter().sum();
-                    expected = cycle_cnt.wrapping_mul(delta_cycle);
+                    let delta_cycle: i32 = sps.offset_for_ref_frame.iter().fold(0i32, |a, &o| a.saturating_add(o));
+                    expected = cycle_cnt.saturating_mul(delta_cycle);
                     for &o in &sps.offset_for_ref_frame[..=in_cycle as usize] {
-                        expected += o;
+                        expected = expected.saturating_add(o);
                     }
                 }
                 if sh.nal_ref_idc == 0 {
-                    expected += sps.offset_for_non_ref_pic;
+                    expected = expected.saturating_add(sps.offset_for_non_ref_pic);
                 }
-                let top = expected + sh.delta_pic_order_cnt[0];
-                let bottom = top + sps.offset_for_top_to_bottom_field + sh.delta_pic_order_cnt[1];
+                let top = expected.saturating_add(sh.delta_pic_order_cnt[0]);
+                let bottom = top.saturating_add(sps.offset_for_top_to_bottom_field).saturating_add(sh.delta_pic_order_cnt[1]);
                 Poc { top, bottom, msb: 0, frame_num_offset }
             }
             _ => {
@@ -501,9 +501,9 @@ impl PocState {
                 let temp = if sh.idr {
                     0
                 } else if sh.nal_ref_idc == 0 {
-                    2 * (frame_num_offset + sh.frame_num as i32) - 1
+                    2i32.saturating_mul(frame_num_offset.saturating_add(sh.frame_num as i32)).saturating_sub(1)
                 } else {
-                    2 * (frame_num_offset + sh.frame_num as i32)
+                    2i32.saturating_mul(frame_num_offset.saturating_add(sh.frame_num as i32))
                 };
                 Poc { top: temp, bottom: temp, msb: 0, frame_num_offset }
             }
@@ -514,7 +514,7 @@ impl PocState {
         if idr {
             0
         } else if self.prev_frame_num > frame_num {
-            self.prev_frame_num_offset + sps.max_frame_num() as i32
+            self.prev_frame_num_offset.saturating_add(sps.max_frame_num() as i32)
         } else {
             self.prev_frame_num_offset
         }
