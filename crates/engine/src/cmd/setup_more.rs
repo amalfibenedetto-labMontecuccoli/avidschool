@@ -307,7 +307,7 @@ fn current_timecode(e: &mut Engine, p: &Value) -> Result<Value> {
     let s = e.session_mut();
     let at = s.edit.selection.start.max(0);
     let abs = tc.to_samples(s.frame_rate, s.sample_rate);
-    s.timecode_start = abs - at;
+    s.timecode_start = abs.saturating_sub(at).clamp(-soundcraft_time::MAX_POSITION, soundcraft_time::MAX_POSITION);
     Ok(json!({"timecode_start": s.timecode_start, "at": at}))
 }
 
@@ -565,6 +565,20 @@ mod tests {
         let s = e.session();
         let shown = s.format_position(48_000, soundcraft_time::TimeFormat::Timecode);
         assert_eq!(shown, "01:00:00:00");
+    }
+
+    #[test]
+    fn current_timecode_out_of_range_is_clamped() {
+        use soundcraft_time::MAX_POSITION;
+        for tc in ["-9223372036854775807:00:00:00", "9999999:00:00:00"] {
+            let mut e = Engine::default();
+            e.execute("edit.select", &json!({"start": 48_000})).unwrap();
+            e.execute("setup.current_timecode", &json!({"timecode": tc})).unwrap();
+            let start = e.session().timecode_start;
+            assert!((-MAX_POSITION..=MAX_POSITION).contains(&start), "{tc}: start {start}");
+            let reloaded = Session::from_json(&e.session().to_json().unwrap()).unwrap();
+            assert_eq!(reloaded.timecode_start, start, "{tc}");
+        }
     }
 
     #[test]
