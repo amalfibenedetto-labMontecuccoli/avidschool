@@ -253,13 +253,13 @@ mod tests {
         {
             let c = e.session_mut().find_clip_mut(id).unwrap();
             c.fade_in.len = 60;
-            c.fade_out.len = 10;
+            c.fade_out.len = 40;
         }
         e.execute("audiosuite.process", &json!({"process": "time_stretch", "params": {"ratio": 0.25}, "clips": [id.0]})).unwrap();
         let c = e.session().tracks[0].clips()[0].clone();
         assert!(c.length < 64, "{}", c.length);
         assert!(c.fade_in.len <= c.length, "fade in {} > length {}", c.fade_in.len, c.length);
-        assert_eq!(c.fade_out.len, 10.min(c.length));
+        assert_eq!(c.fade_out.len, 40.min(c.length));
     }
 
     #[test]
