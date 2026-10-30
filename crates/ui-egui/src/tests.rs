@@ -1576,9 +1576,15 @@ fn editor_gesture_polling_survives_discarded_and_hidden_host_iterations() {
 }
 
 /// The engine's revision, undo history and journal are as they were.
-fn assert_history_unchanged(app: &SoundApp, revision: u64, undo: usize, history: &[String], journal: &[(String, serde_json::Value)]) {
+fn assert_history_unchanged(
+    app: &SoundApp,
+    revision: u64,
+    undo: usize,
+    history: &[String],
+    journal: &std::collections::VecDeque<(String, serde_json::Value)>,
+) {
     assert_eq!(app.engine.revision, revision);
     assert_eq!(app.engine.undo_history().len(), undo);
     assert_eq!(app.engine.undo_history(), history);
-    assert_eq!(app.engine.journal, journal);
+    assert_eq!(&app.engine.journal, journal);
 }
